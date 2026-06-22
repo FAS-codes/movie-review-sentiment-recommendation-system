@@ -5,7 +5,9 @@ pandas
 nltk
 
 # Machine Learning
-scikit-learn
+# Pinned: the .pkl models were serialized with scikit-learn 1.6.1.
+# Loading them under a different version risks invalid predictions.
+scikit-learn==1.6.1
 
 # Visualization
 seaborn

@@ -8,11 +8,14 @@ from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer, WordNetLemmatizer
 import nltk
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 # -----------------------------
 # NLTK Downloads
 # -----------------------------
 nltk.download('punkt')
+nltk.download('punkt_tab')
 nltk.download('stopwords')
 nltk.download('wordnet')
 
@@ -58,7 +61,16 @@ metrics = load_metrics()
 # Load Recommender Model
 # -----------------------------
 df = pickle.load(open('movies.pkl', 'rb'))
-cosine_sim = pickle.load(open('similarity.pkl', 'rb'))
+
+# The full N x N similarity matrix (~184 MB for 4,803 movies) is not shipped.
+# Instead we rebuild the count matrix once and compute similarity per query,
+# which keeps memory low enough for free-tier hosting.
+@st.cache_resource
+def build_count_matrix():
+    cv = CountVectorizer()
+    return cv.fit_transform(df['combined_features'])
+
+count_matrix = build_count_matrix()
 
 def get_title_from_index(index):
     return df.loc[index, 'title']
@@ -74,7 +86,8 @@ def recommend(movie_name, top_n):
     index = get_index_from_title(movie_name)
     if index is None:
         return None
-    sim_scores = list(enumerate(cosine_sim[index]))
+    sim_vector = cosine_similarity(count_matrix[index], count_matrix).flatten()
+    sim_scores = list(enumerate(sim_vector))
     sorted_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)[1:top_n+1]
     recommended_movies = []
     for i, score in sorted_scores:
