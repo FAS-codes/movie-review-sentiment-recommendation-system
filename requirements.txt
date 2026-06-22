@@ -5,9 +5,9 @@ pandas
 nltk
 
 # Machine Learning
-# Pinned: the .pkl models were serialized with scikit-learn 1.6.1.
-# Loading them under a different version risks invalid predictions.
-scikit-learn==1.6.1
+# Models were serialized with scikit-learn 1.6.x; allow that line or newer
+# so Cloud can always resolve a compatible wheel (loads with a soft warning).
+scikit-learn>=1.6
 
 # Visualization
 seaborn
